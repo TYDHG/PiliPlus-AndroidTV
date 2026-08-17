@@ -7,7 +7,13 @@ import 'package:PiliPlus/tv/utils/tv_navigation_registry.dart';
 import 'package:PiliPlus/tv/utils/tv_storage_pref.dart';
 import 'package:PiliPlus/utils/theme_utils.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:flutter/services.dart' show SystemNavigator;
+import 'package:flutter/services.dart'
+    show
+        KeyDownEvent,
+        KeyEvent,
+        KeyRepeatEvent,
+        LogicalKeyboardKey,
+        SystemNavigator;
 
 /// A tab in the TV top navigation bar.
 class _TvTab {
@@ -91,6 +97,25 @@ class _TvMainState extends State<TvMain> {
     }
   }
 
+  KeyEventResult _onTabKeyEvent(int index, KeyEvent event) {
+    final key = event.logicalKey;
+    if (key != LogicalKeyboardKey.arrowLeft &&
+        key != LogicalKeyboardKey.arrowRight) {
+      return KeyEventResult.ignored;
+    }
+
+    // 导航栏显式处理左右键，避免滚动后的内容卡片参与二维焦点计算。
+    if (event is KeyDownEvent || event is KeyRepeatEvent) {
+      final targetIndex = key == LogicalKeyboardKey.arrowLeft
+          ? index - 1
+          : index + 1;
+      if (targetIndex >= 0 && targetIndex < _tabNodes.length) {
+        _tabNodes[targetIndex].requestFocus();
+      }
+    }
+    return KeyEventResult.handled;
+  }
+
   @override
   Widget build(BuildContext context) {
     // The TV UI is always dark/cinematic regardless of the app theme mode.
@@ -158,6 +183,7 @@ class _TvMainState extends State<TvMain> {
       padding: const EdgeInsets.only(right: 20 * TvTheme.designScale),
       child: TvFocusable(
         focusNode: _tabNodes[index],
+        onKeyEvent: (node, event) => _onTabKeyEvent(index, event),
         onSelect: () => _selectTab(index),
         onFocusChange: (focused) => _onTabFocusChange(index, focused),
         borderRadius: TvTheme.tabRadius,
