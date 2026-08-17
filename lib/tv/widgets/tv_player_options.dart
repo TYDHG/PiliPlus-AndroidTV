@@ -5,6 +5,8 @@ import 'package:PiliPlus/models/common/video/video_decode_type.dart';
 import 'package:PiliPlus/models/common/video/video_quality.dart';
 import 'package:PiliPlus/models/common/video/video_type.dart';
 import 'package:PiliPlus/models/video/play/url.dart';
+import 'package:PiliPlus/models_new/pgc/pgc_info_model/episode.dart'
+    as pgc_episode;
 import 'package:PiliPlus/models_new/video/video_detail/episode.dart';
 import 'package:PiliPlus/models_new/video/video_detail/page.dart';
 import 'package:PiliPlus/pages/common/common_intro_controller.dart';
@@ -664,19 +666,22 @@ class _TvPlayerOptionsState extends State<TvPlayerOptions> {
 
   // ------------------------------------------------------------- episodes --
 
-  /// The 分P part list when this video has more than one part; empty otherwise
-  /// (合集/PGC series are navigated by prev/next, not this jump picker).
+  /// 根据视频类型返回投稿分P或影视剧集。
   List<BaseEpisodeItem> _episodes() {
+    final intro = widget.introController;
+    if (intro is PgcIntroController) {
+      return intro.pgcItem.episodes ?? const <BaseEpisodeItem>[];
+    }
     final pages = widget.introController.videoDetail.value.pages;
     return (pages != null && pages.length > 1)
         ? pages
         : const <BaseEpisodeItem>[];
   }
 
-  /// Whether prev/next make sense — multi-part or part of a 合集.
+  /// 多分P、影视剧集或合集支持上一集和下一集。
   bool get _isSeries {
     final vd = widget.introController.videoDetail.value;
-    return (vd.pages?.length ?? 0) > 1 || vd.ugcSeason != null;
+    return _episodes().length > 1 || vd.ugcSeason != null;
   }
 
   void _prevEpisode() {
@@ -732,6 +737,15 @@ class _TvPlayerOptionsState extends State<TvPlayerOptions> {
 
   static String _episodeLabel(BaseEpisodeItem ep, int i) {
     if (ep is Part) return ep.part ?? '第${ep.page ?? i + 1}P';
+    if (ep is pgc_episode.EpisodeItem) {
+      final showTitle = ep.showTitle?.trim();
+      final longTitle = ep.longTitle?.trim();
+      if (showTitle?.isNotEmpty == true && longTitle?.isNotEmpty == true) {
+        return '$showTitle $longTitle';
+      }
+      if (showTitle?.isNotEmpty == true) return showTitle!;
+      if (longTitle?.isNotEmpty == true) return longTitle!;
+    }
     return ep.title ?? '第${i + 1}集';
   }
 

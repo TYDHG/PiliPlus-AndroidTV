@@ -116,6 +116,7 @@ void main() async {
 
   if (PlatformUtils.isAndroidTV) {
     fullMode();
+    GStorage.setting.put(SettingBoxKey.horizontalScreen, true);
   } else if (PlatformUtils.isMobile) {
     if (Platform.isAndroid) MaxScreenSize.init();
     await Future.wait([
