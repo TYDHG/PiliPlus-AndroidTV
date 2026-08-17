@@ -114,7 +114,9 @@ void main() async {
     ..lazyPut(DownloadService.new);
   HttpOverrides.global = _CustomHttpOverrides();
 
-  if (PlatformUtils.isMobile) {
+  if (PlatformUtils.isAndroidTV) {
+    fullMode();
+  } else if (PlatformUtils.isMobile) {
     if (Platform.isAndroid) MaxScreenSize.init();
     await Future.wait([
       if (Pref.horizontalScreen) ?fullMode() else ?portraitUpMode(),
@@ -130,8 +132,6 @@ void main() async {
     }
   } else if (Platform.isMacOS) {
     await setupServiceLocator();
-  } else if (PlatformUtils.isAndroidTV) {
-    fullMode();
   }
 
   Request();
