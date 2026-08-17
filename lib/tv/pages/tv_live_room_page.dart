@@ -385,9 +385,7 @@ class _TvLiveRoomPageState extends State<TvLiveRoomPage> {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              // Build the player once the play-url is resolved; PLVideoPlayer
-              // reveals the AVPlay hole-punch surface itself. A fullscreen
-              // widget rect means a fullscreen native video ROI.
+              // 播放地址解析完成后创建播放器，并在所有 Android TV 上保持全屏。
               Obx(
                 () => liveCtr.isLoaded.value
                     ? _buildPlayer(size)

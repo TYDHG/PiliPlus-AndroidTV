@@ -297,20 +297,10 @@ class _TvPlayerOptionsState extends State<TvPlayerOptions> {
     _setMode(_PanelMode.main);
   }
 
-  /// Fit modes offered on TV. The AVPlay hardware overlay can only be laid
-  /// out (see `_fitTizenOverlay` in the player view): `fill` stretches to the
-  /// screen, the fixed ratios letterbox to 16:9 / 4:3, and everything else
-  /// letterboxes to the video's own ratio — so contain-like variants (cover,
-  /// fitWidth, ...) would all render identically to 自动 and are left out.
-  static const List<VideoFitType> _tvFits = [
-    VideoFitType.contain,
-    VideoFitType.fill,
-    VideoFitType.ratio_16x9,
-    VideoFitType.ratio_4x3,
-  ];
+  /// Android TV 使用 Flutter 视频渲染，可提供播放器支持的全部画面模式。
+  static const List<VideoFitType> _tvFits = VideoFitType.values;
 
-  /// Same path as the mobile fit selector (`toggleVideoFit`): updates the
-  /// reactive `videoFit` (the Tizen surface relayouts live) and persists it.
+  /// 与移动端画面模式选择器使用相同设置路径并持久化结果。
   void _cycleVideoFit() {
     final player = widget.plPlayerController;
     final index = _tvFits.indexOf(player.videoFit.value);
@@ -455,8 +445,7 @@ class _TvPlayerOptionsState extends State<TvPlayerOptions> {
         );
       }),
       // Subtitles: [subtitles] is a reactive list, [vttSubtitlesIndex] the
-      // active track (0 = off, 1..N). The Tizen render pipeline is already
-      // wired (TizenSubtitleOverlay); this row just drives setSubtitle.
+      // active track (0 = off, 1..N); this row drives setSubtitle.
       (n) => Obx(() {
         final loaded = videoCtr.currentVideoQa.value != null;
         return TvOptionRow(
@@ -565,8 +554,7 @@ class _TvPlayerOptionsState extends State<TvPlayerOptions> {
 
   // ---------------------------------------------------------- decode format --
 
-  /// Distinct decode formats offered by the current quality's video streams,
-  /// excluding Dolby Vision (the Samsung panel can't decode it).
+  /// 当前画质实际提供的全部解码格式，具体支持能力交由 Android 播放器判断。
   List<VideoDecodeFormatType> _availableDecodeFormats() {
     final videoCtr = widget.videoDetailController;
     final qa = videoCtr.currentVideoQa.value?.code;
@@ -577,7 +565,7 @@ class _TvPlayerOptionsState extends State<TvPlayerOptions> {
       if (v.id != qa || v.codecs == null) continue;
       try {
         final fmt = VideoDecodeFormatType.fromString(v.codecs!);
-        if (fmt != VideoDecodeFormatType.DVH1) set.add(fmt);
+        set.add(fmt);
       } catch (_) {}
     }
     return set.toList();
@@ -815,10 +803,7 @@ class _TvPlayerOptionsState extends State<TvPlayerOptions> {
     widget.onClose();
   }
 
-  /// The quality tiers offered for this video, minus the ones the S90F can't
-  /// decode (Dolby Vision 126 / 8K 127 / HDR-Vivid 129); HDR10 (125) stays. Used
-  /// for BOTH the rendered rows and the focus-node count in build(), so the two
-  /// never diverge — a mismatch would strand FocusNodes and break D-pad nav.
+  /// 视频接口返回的全部画质，用于渲染列表及同步焦点节点数量。
   List<FormatItem> _qualityFormats() =>
       widget.videoDetailController.data.supportFormats!.toList();
 

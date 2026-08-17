@@ -73,15 +73,11 @@ class TvSearchController
   }
 }
 
-/// TV search screen: a D-pad-navigable on-screen keyboard on the left and a
-/// results grid on the right.
+/// TV 搜索页面：左侧为遥控器屏幕键盘，右侧为搜索结果网格。
 ///
-/// Two input paths edit the same [TvSearchController.query]:
-/// * the custom on-screen keyboard (latin/digits/space) for quick D-pad
-///   typing without leaving the app's focus model;
-/// * the Tizen system IME (pinyin/CJK/voice) — the「系统键盘」key focuses the
-///   query box, which is a real [TextField], so the embedder's text-input
-///   channel raises the native keyboard.
+/// 两种输入方式共同编辑 [TvSearchController.query]：
+/// * 使用屏幕键盘快速输入拉丁字母、数字和空格；
+/// * 选择“系统键盘”后聚焦真实 [TextField]，拉起 Android TV 系统输入法。
 class TvSearch extends StatefulWidget {
   const TvSearch({super.key});
 
@@ -117,10 +113,8 @@ class _TvSearchState extends State<TvSearch> {
   /// keyboard edit one shared value.
   final TextEditingController _imeController = TextEditingController();
 
-  /// Focus of the query box's [TextField]. [FocusNode.skipTraversal] keeps
-  /// D-pad arrows from ever landing on it; it is only entered explicitly by
-  /// the「系统键盘」key, whose requestFocus opens a platform text-input
-  /// connection — flutter-tizen's embedder then raises the system IME.
+  /// 查询输入框焦点。[FocusNode.skipTraversal] 避免方向键意外进入，
+  /// 只有选择“系统键盘”时才显式聚焦并拉起 Android 系统输入法。
   final FocusNode _imeFocusNode = FocusNode(
     debugLabel: 'TvSearch.ime',
     skipTraversal: true,

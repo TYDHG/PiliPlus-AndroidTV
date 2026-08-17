@@ -1,21 +1,15 @@
 import 'package:material_ui/material_ui.dart';
 
-/// Design constants for the TV (D-pad) UI, in one tweakable place.
+/// TV 遥控器界面的集中设计常量。
 ///
-/// All dimensional tokens are **authored in 1920-design px** (sized as if the
-/// canvas were 1920x1080 logical) and converted to the device's real logical
-/// canvas via [designScale]. The S90F's real canvas is **1200x675 logical**
-/// (1920x1080 physical framebuffer at devicePixelRatio 1.6, hardware-upscaled
-/// to the 4K panel). The conversion deliberately lives here in the tokens —
-/// NOT in the binding scaleFactor or devicePixelRatio — so MediaQuery and the
-/// AVPlay hardware-overlay ROI keep the device's native coordinate system.
+/// 所有尺寸以 1920x1080 设计画布为基准，
+/// 通过 [designScale] 转换到 1200x675 逻辑视口基准；依赖可用宽度的布局
+/// 继续使用设备的实时约束。
 ///
-/// The grid derives card width from the live constraint width, so column
-/// counts stay correct regardless.
+/// 网格根据实时宽度约束计算卡片尺寸，保持不同分辨率下的列数一致。
 abstract final class TvTheme {
-  /// 0.625 — the single TV sizing knob: converts 1920-design px to the real
-  /// 1200-wide logical canvas. Dimensionless values (scales, aspect ratios,
-  /// line-height multipliers, opacities, column counts) are NOT scaled by it.
+  /// 0.625 将 1920 设计像素转换到 1200 宽的逻辑基准。
+  /// 缩放、宽高比、行高倍数、透明度和列数等无量纲数值不受影响。
   static const double designScale = 1200 / 1920;
 
   // ---------------------------------------------------------------- focus --

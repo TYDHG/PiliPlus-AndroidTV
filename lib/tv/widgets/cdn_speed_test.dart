@@ -13,9 +13,8 @@ import 'package:flutter/foundation.dart';
 ///
 /// Shared by the TV settings CDN page and the in-player CDN submenu. Each mirror
 /// is measured by host-rewriting the same sample stream (via
-/// [VideoUtils.getCdnUrl]) and timing a short range download. Sequential — one
-/// socket at a time — because many concurrent sockets are unstable on the Tizen
-/// runtime.
+/// 通过 [VideoUtils.getCdnUrl] 替换线路并执行短距离下载测速。
+/// 测试按顺序执行，避免在低性能电视上与视频播放争抢带宽。
 class CdnSpeedTest {
   /// Per-test byte cap and timeout — small enough to keep the sweep responsive
   /// (and to limit how much bandwidth it steals from a concurrently-playing

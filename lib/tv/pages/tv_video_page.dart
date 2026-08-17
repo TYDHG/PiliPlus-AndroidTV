@@ -52,8 +52,8 @@ import 'package:get/get.dart';
 /// scrubber — each tap nudges a VISUAL target ±10s (holding accelerates the
 /// step), a scrub bar with a Bilibili-videoshot thumbnail preview + target
 /// time/delta tracks it, and exactly ONE native seek commits on OK or after a
-/// ~1s idle; Back cancels with zero seeks. (Per-keypress native seeks used to
-/// race AVPlay to the end — the scrubber fires at most one seek per gesture.)
+/// ~1s idle; Back cancels with zero seeks. Each gesture commits at most one
+/// native seek to avoid repeated requests overloading the player.
 /// Up (or the remote's menu key) opens the options panel (弹幕/清晰度/音质/
 /// 播放速度/画面比例/播放顺序 via [TvPlayerOptions]), Down peeks the controls,
 /// Back hides the controls or
@@ -110,7 +110,7 @@ class _TvVideoPageState extends State<TvVideoPage> {
 
   // ---- Apple-TV-style scrubber state (all pure-Dart; no native calls until
   // commit). Left/Right move a VISUAL target; exactly one native seek fires
-  // per gesture. This is the fix for the per-keypress-seek AVPlay race.
+  // 每次操作只提交一次跳转，避免连续请求使原生播放器过载。
   final RxBool _scrubbing = false.obs; // drives the scrubber overlay
   final RxInt _scrubTargetMs = 0.obs; // ms-precise visual target
   int _scrubOriginMs = 0; // playhead at gesture start (per-gesture const)
@@ -535,9 +535,8 @@ class _TvVideoPageState extends State<TvVideoPage> {
     _armIdleCommit();
   }
 
-  /// Acceleration curve for a held key (time-based, so it is independent of the
-  /// unknown Tizen key-repeat rate): 10s → 30s → 60s, and up to duration/20 for
-  /// very long videos once held a while.
+  /// 长按加速曲线与设备按键重复速率无关：10 秒 → 30 秒 → 60 秒，
+  /// 长视频持续按住时最大跳转步长为总时长的 1/20。
   int _stepSecondsForHold(Duration held) {
     if (held < const Duration(milliseconds: 1600)) return 10;
     if (held < const Duration(seconds: 4)) return 30;
@@ -935,10 +934,7 @@ class _TvVideoPageState extends State<TvVideoPage> {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  // Same gate as the mobile page uses on Tizen: build the player
-                  // once the source is loaded; PLVideoPlayer then reveals the
-                  // AVPlay hole-punch surface itself. A fullscreen widget rect
-                  // means a fullscreen native video ROI.
+                  // 播放源加载完成后创建播放器，并在所有 Android TV 上保持全屏。
                   Obx(
                     () => videoDetailController.videoState.value
                         ? _buildPlayer(size)
