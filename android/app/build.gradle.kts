@@ -1,5 +1,6 @@
 import com.android.build.gradle.internal.api.ApkVariantOutputImpl
 import org.jetbrains.kotlin.konan.properties.Properties
+import java.util.Base64
 
 plugins {
     id("com.android.application")
@@ -17,6 +18,14 @@ if (!isBuiltInKotlinEnabled) {
     apply(plugin = "org.jetbrains.kotlin.android")
 }
 
+val dartDefines = providers.gradleProperty("dart-defines").orNull
+    ?.split(',')
+    ?.mapNotNull {
+        runCatching { String(Base64.getDecoder().decode(it)) }.getOrNull()
+    }
+    .orEmpty()
+val isAndroidTv = dartDefines.contains("IS_ANDROID_TV=true")
+
 android {
     namespace = "com.example.piliplus"
     compileSdk = 37
@@ -29,10 +38,26 @@ android {
 
     defaultConfig {
         applicationId = "com.example.piliplus"
+        if (isAndroidTv) {
+            applicationIdSuffix = ".tv"
+            versionNameSuffix = "-tv"
+        }
         minSdk = flutter.minSdkVersion
         targetSdk = 37
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        manifestPlaceholders["launcherCategory"] = if (isAndroidTv) {
+            "android.intent.category.LEANBACK_LAUNCHER"
+        } else {
+            "android.intent.category.LAUNCHER"
+        }
+        manifestPlaceholders["screenOrientation"] = if (isAndroidTv) {
+            "landscape"
+        } else {
+            "unspecified"
+        }
+        manifestPlaceholders["leanbackRequired"] = isAndroidTv.toString()
+        manifestPlaceholders["touchscreenRequired"] = (!isAndroidTv).toString()
     }
 
     packagingOptions.jniLibs.useLegacyPackaging = true

@@ -1,6 +1,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.piliplus">
 
+    <uses-feature
+        android:name="android.software.leanback"
+        android:required="${leanbackRequired}" />
+    <uses-feature
+        android:name="android.hardware.touchscreen"
+        android:required="${touchscreenRequired}" />
+
     <queries>
         <intent>
             <action android:name="android.intent.action.VIEW" />
@@ -53,6 +60,7 @@
             android:hardwareAccelerated="true"
             android:launchMode="singleTask"
             android:resizeableActivity="true"
+            android:screenOrientation="${screenOrientation}"
             android:supportsPictureInPicture="true"
             android:theme="@style/LaunchTheme"
             android:windowSoftInputMode="adjustResize">
@@ -76,6 +84,7 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="${launcherCategory}" />
             </intent-filter>
             <intent-filter android:label="PiliPlus">
                 <action android:name="android.intent.action.VIEW" />

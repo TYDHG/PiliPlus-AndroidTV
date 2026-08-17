@@ -130,6 +130,8 @@ void main() async {
     }
   } else if (Platform.isMacOS) {
     await setupServiceLocator();
+  } else if (PlatformUtils.isAndroidTV) {
+    fullMode();
   }
 
   Request();
@@ -331,6 +333,15 @@ class MyApp extends StatelessWidget {
           viewPadding: tmpPadding,
         ),
         child: child!,
+      );
+    }
+    if (PlatformUtils.isTV) {
+      child = Shortcuts(
+        shortcuts: const <ShortcutActivator, Intent>{
+          SingleActivator(LogicalKeyboardKey.select): ActivateIntent(),
+          SingleActivator(LogicalKeyboardKey.gameButtonA): ActivateIntent(),
+        },
+        child: child,
       );
     }
     if (PlatformUtils.isDesktop) {

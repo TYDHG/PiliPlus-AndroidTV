@@ -10,4 +10,7 @@ abstract final class PlatformUtils {
 
   @pragma("vm:platform-const")
   static final bool isDarwin = Platform.isIOS || Platform.isMacOS;
+
+  static const bool isAndroidTV = bool.fromEnvironment('IS_ANDROID_TV');
+  static const bool isTV = isAndroidTV;
 }
