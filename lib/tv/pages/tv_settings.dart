@@ -1,11 +1,13 @@
 import 'dart:async';
 
+import 'package:PiliPlus/build_config.dart';
 import 'package:PiliPlus/models/common/video/video_quality.dart';
 import 'package:PiliPlus/services/account_service.dart';
 import 'package:PiliPlus/tv/pages/tv_cdn_page.dart';
 import 'package:PiliPlus/tv/pages/tv_login.dart';
 import 'package:PiliPlus/tv/pages/tv_navigation_settings.dart';
 import 'package:PiliPlus/tv/tv_theme.dart';
+import 'package:PiliPlus/tv/utils/tv_update.dart';
 import 'package:PiliPlus/tv/widgets/tv_option_row.dart';
 import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/storage.dart';
@@ -177,6 +179,12 @@ class _TvSettingsState extends State<TvSettings> {
               label: '顶部导航',
               value: '自定义',
               onSelect: _openNavigationSettings,
+            ),
+            const SizedBox(height: _rowGap),
+            TvOptionRow(
+              label: '检查更新',
+              value: '${BuildConfig.versionName}+${BuildConfig.versionCode}',
+              onSelect: () => TvUpdate.checkUpdate(context),
             ),
             const SizedBox(height: _rowGap),
             Obx(
