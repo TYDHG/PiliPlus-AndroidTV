@@ -79,7 +79,6 @@ abstract final class TvUpdate {
     final notes = '${data['body'] ?? ''}'.trim();
     final assets = data['assets'] is List ? data['assets'] as List : const [];
     final currentVersion = _currentVersion();
-    print('当前版本：$currentVersion');
     final isCurrentAsset = assets.any(
       (asset) => asset is Map && '${asset['name']}'.contains(currentVersion),
     );
