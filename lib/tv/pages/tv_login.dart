@@ -100,7 +100,7 @@ class TvLoginController extends GetxController {
       data['refresh_token'],
     );
     // Same persistence as the mobile setAccount.
-    await Future.wait([account.onChange(), AnonymousAccount().delete()]);
+    await Future.wait([?account.onChange(), AnonymousAccount().delete()]);
     // Bind the account to every mode; main last so the app-wide login state
     // flips once everything else is in place.
     for (final type in AccountType.values) {
