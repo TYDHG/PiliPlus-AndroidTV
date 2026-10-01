@@ -37,9 +37,10 @@ class TvMain extends StatefulWidget {
 }
 
 class _TvMainState extends State<TvMain> {
+  final _homeKey = GlobalKey<TvHomeState>();
   late final List<_TvTab> _tabs = [
     _TvTab(label: '搜索', builder: (_) => const TvSearch()),
-    _TvTab(label: '推荐', builder: (_) => const TvHome()),
+    _TvTab(label: '推荐', builder: (_) => TvHome(key: _homeKey)),
     for (final type in TvPref.tvNavigationBar)
       _TvTab(
         label: type.label,
@@ -49,6 +50,9 @@ class _TvMainState extends State<TvMain> {
   ];
 
   void _selectTab(int index) {
+    if (index == 1) {
+      _homeKey.currentState?.refresh();
+    }
     setState(() {
       _index = index;
       _builtTabs.add(index);

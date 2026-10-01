@@ -31,7 +31,7 @@ import 'package:PiliPlus/utils/storage_key.dart';
 import 'package:PiliPlus/utils/theme_utils.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart'
-    show KeyDownEvent, KeyRepeatEvent, LogicalKeyboardKey;
+    show HardwareKeyboard, KeyDownEvent, KeyUpEvent, KeyRepeatEvent, LogicalKeyboardKey;
 import 'package:PiliPlus/plugin/pl_player/models/data_status.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
@@ -68,6 +68,18 @@ class TvVideoPage extends StatefulWidget {
 }
 
 class _TvVideoPageState extends State<TvVideoPage> {
+  LocalHistoryEntry? _menuHistory;
+  LocalHistoryEntry? _commentsHistory;
+  bool _disposing = false;
+  bool _consumeBackRelease = false;
+
+  bool _isBackKey(LogicalKeyboardKey key) =>
+      key == LogicalKeyboardKey.goBack ||
+      key == LogicalKeyboardKey.browserBack ||
+      key == LogicalKeyboardKey.escape;
+
+  ModalRoute<dynamic> get _pageRoute =>
+      ModalRoute.of(context) ?? Get.routing.route as ModalRoute<dynamic>;
   late final String heroTag;
   late final String _argTitle;
 
@@ -254,6 +266,9 @@ class _TvVideoPageState extends State<TvVideoPage> {
 
   @override
   void dispose() {
+    _disposing = true;
+    _commentsHistory?.remove();
+    _menuHistory?.remove();
     _hideTimer?.cancel();
     _lagPollTimer?.cancel();
     _scrubCommitTimer?.cancel();
@@ -430,25 +445,27 @@ class _TvVideoPageState extends State<TvVideoPage> {
     }
     _hideControls();
     _optionsInitialFocusIndex = 0;
+    if (_menuHistory != null) return;
+    // 本地历史可以拦截直接 pop，返回时先关闭菜单而非退出视频路由。
+    _menuHistory = LocalHistoryEntry(
+      onRemove: () {
+        _menuHistory = null;
+        if (_disposing || !mounted) return;
+        _optionsVisible.value = false;
+        _focusNode.requestFocus();
+      },
+    );
+    _pageRoute.addLocalHistoryEntry(_menuHistory!);
     _optionsVisible.value = true;
   }
 
   void _closeOptions() {
-    if (!_optionsVisible.value && !_commentsVisible.value) return;
-    if (_commentsVisible.value) {
-      _optionsInitialFocusIndex = 1;
-      _commentsVisible.value = false;
-      _optionsVisible.value = true;
-    } else {
-      _optionsVisible.value = false;
-    }
-    // Hand the D-pad back to the page.
-    _focusNode.requestFocus();
-  }
-
-  void _onPopInvoked(bool didPop, Object? result) {
-    if (didPop || (!_optionsVisible.value && !_commentsVisible.value)) return;
-    _closeOptions();
+    // 菜单在按下时卸载，抬起事件会交给视频页，必须一并消费。
+    _consumeBackRelease = HardwareKeyboard.instance.logicalKeysPressed.any(
+      _isBackKey,
+    );
+    final entry = _commentsHistory ?? _menuHistory;
+    entry?.remove();
   }
 
   /// OK: toggle play/pause; if autoplay is off and no session exists yet,
@@ -761,6 +778,12 @@ class _TvVideoPageState extends State<TvVideoPage> {
 
   KeyEventResult _onKeyEvent(FocusNode node, KeyEvent event) {
     final key = event.logicalKey;
+    if (_consumeBackRelease && _isBackKey(key)) {
+      if (event is KeyUpEvent) _consumeBackRelease = false;
+      if (event is! KeyDownEvent) return KeyEventResult.handled;
+      // 新的按下表示上一次抬起丢失，不能吞掉用户的下一次返回。
+      _consumeBackRelease = false;
+    }
     final isDown = event is KeyDownEvent;
     final isDownOrRepeat = isDown || event is KeyRepeatEvent;
 
@@ -922,11 +945,7 @@ class _TvVideoPageState extends State<TvVideoPage> {
   Widget build(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
     // Always dark/cinematic, matching the rest of the TV UI.
-    return Obx(
-      () => PopScope(
-        canPop: !_optionsVisible.value && !_commentsVisible.value,
-        onPopInvokedWithResult: _onPopInvoked,
-        child: Theme(
+    return Theme(
           data: ThemeUtils.darkTheme,
           child: Scaffold(
             backgroundColor: Colors.black,
@@ -1041,14 +1060,24 @@ class _TvVideoPageState extends State<TvVideoPage> {
               ),
             ),
           ),
-        ),
-      ),
     );
   }
 
   /// Opens the read-only comments panel (only when the video has replies).
   void _openComments() {
-    _closeOptions();
+    if (_commentsHistory != null) return;
+    // 保留菜单历史，评论返回后恢复菜单并聚焦评论选项。
+    _commentsHistory = LocalHistoryEntry(
+      onRemove: () {
+        _commentsHistory = null;
+        if (_disposing || !mounted) return;
+        _optionsInitialFocusIndex = 1;
+        _commentsVisible.value = false;
+        _optionsVisible.value = true;
+      },
+    );
+    _pageRoute.addLocalHistoryEntry(_commentsHistory!);
+    _optionsVisible.value = false;
     _commentsVisible.value = true;
   }
 
