@@ -85,6 +85,8 @@ class _TvVideoPageState extends State<TvVideoPage> {
   PlPlayerController? plPlayerController;
 
   final RxBool _controlsVisible = false.obs;
+  // 控制器状态已改为普通枚举，通过状态监听同步图标。
+  final Rx<PlayerStatus> _playbackStatus = PlayerStatus.paused.obs;
   final RxBool _optionsVisible = false.obs;
   final RxBool _commentsVisible = false.obs;
   int _optionsInitialFocusIndex = 0;
@@ -258,6 +260,7 @@ class _TvVideoPageState extends State<TvVideoPage> {
     _landingTimer?.cancel();
     _focusNode.dispose();
     _controlsVisible.close();
+    _playbackStatus.close();
     _commentsVisible.close();
     _endCardVisible.close();
     _upNext.close();
@@ -319,6 +322,7 @@ class _TvVideoPageState extends State<TvVideoPage> {
   /// On completion, hands off to [_handleCompletion] (播放顺序 → replay / 接下来
   /// / stop).
   void _statusListener(PlayerStatus status) {
+    _playbackStatus.value = status;
     if (status.isCompleted) {
       _handleCompletion();
     }
@@ -1242,7 +1246,7 @@ class _TvVideoPageState extends State<TvVideoPage> {
             Row(
               children: [
                 Obx(() {
-                  final status = playerCtr.playerStatus.value;
+                  final status = _playbackStatus.value;
                   return Icon(
                     status.isPlaying
                         ? Icons.pause_rounded

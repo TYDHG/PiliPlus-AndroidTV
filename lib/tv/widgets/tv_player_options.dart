@@ -268,7 +268,7 @@ class _TvPlayerOptionsState extends State<TvPlayerOptions> {
   /// [_switchQuality].
   void _switchAudioQuality(AudioItem item) {
     final videoCtr = widget.videoDetailController;
-    final int quality = item.id!;
+    final int quality = item.id;
     if (videoCtr.currentAudioQa?.code != quality) {
       final newQa = AudioQuality.fromCode(quality);
       // Dolby Atmos (EC-3, 30250/30255) is sticky via its own pref, and must NOT

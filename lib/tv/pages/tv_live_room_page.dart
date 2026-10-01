@@ -60,6 +60,8 @@ class _TvLiveRoomPageState extends State<TvLiveRoomPage> {
   PlPlayerController get playerCtr => liveCtr.plPlayerController;
 
   final RxBool _controlsVisible = false.obs;
+  // 控制器状态已改为普通枚举，通过状态监听同步图标。
+  final Rx<PlayerStatus> _playbackStatus = PlayerStatus.paused.obs;
   final RxBool _optionsVisible = false.obs;
 
   /// Chat rail toggle. Wired here so Down/Back behave; the passive rail panel
@@ -152,6 +154,7 @@ class _TvLiveRoomPageState extends State<TvLiveRoomPage> {
     _feedbackTimer?.cancel();
     _focusNode.dispose();
     _controlsVisible.close();
+    _playbackStatus.close();
     _optionsVisible.close();
     _chatVisible.close();
     _danmakuFeedback.close();
@@ -172,6 +175,7 @@ class _TvLiveRoomPageState extends State<TvLiveRoomPage> {
   /// start the 开播 timer, open the message socket; paused → pause danmaku,
   /// cancel the timer, close the socket, and pin the INFO bar.
   void _statusListener(PlayerStatus status) {
+    _playbackStatus.value = status;
     if (status.isPlaying) {
       liveCtr
         ..danmakuController?.resume()
@@ -242,7 +246,7 @@ class _TvLiveRoomPageState extends State<TvLiveRoomPage> {
   /// the 开播 timer and the chat socket.
   void _togglePlayPause() {
     if (playerCtr.videoPlayerController == null) return;
-    if (playerCtr.playerStatus.value.isPlaying) {
+    if (playerCtr.playerStatus.isPlaying) {
       playerCtr.pause();
       return;
     }
@@ -603,7 +607,7 @@ class _TvLiveRoomPageState extends State<TvLiveRoomPage> {
             Row(
               children: [
                 Obx(() {
-                  final playing = playerCtr.playerStatus.value.isPlaying;
+                  final playing = _playbackStatus.value.isPlaying;
                   return Icon(
                     playing ? Icons.pause_rounded : Icons.play_arrow_rounded,
                     size: 52 * TvTheme.designScale,

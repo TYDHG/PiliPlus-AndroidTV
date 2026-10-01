@@ -187,7 +187,7 @@ class _TvLiveOptionsState extends State<TvLiveOptions> {
       return;
     }
     ctr
-      ..onLikeTapDown()
+      ..onLikeTapDown(null)
       ..onLikeTapUp();
   }
 
