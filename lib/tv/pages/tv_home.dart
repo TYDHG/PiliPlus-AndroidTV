@@ -27,16 +27,34 @@ class TvHome extends StatefulWidget {
   const TvHome({super.key});
 
   @override
-  State<TvHome> createState() => _TvHomeState();
+  State<TvHome> createState() => TvHomeState();
 }
 
-class _TvHomeState extends State<TvHome> {
+class TvHomeState extends State<TvHome> {
   static const _controllerTag = 'tv-home';
   final RcmdController _controller = Get.put(
     RcmdController(),
     tag: _controllerTag,
   );
   final List<FocusNode> _focusNodes = [];
+  bool _refreshFromNavigation = false;
+
+  /// 导航栏确认时刷新推荐，保留导航焦点并回到列表顶部。
+  Future<void> refresh() async {
+    if (_controller.isLoading) return;
+    _refreshFromNavigation = true;
+    if (_controller.scrollController.hasClients) {
+      _controller.scrollController.jumpTo(0);
+    }
+    final saveLastData = _controller.enableSaveLastData;
+    // 全量重载已清空旧列表，失败时需显示错误而非保留加载状态。
+    _controller.enableSaveLastData = false;
+    try {
+      await _controller.onReload();
+    } finally {
+      _controller.enableSaveLastData = saveLastData;
+    }
+  }
 
   void _syncFocusNodes(int count) {
     while (_focusNodes.length < count) {
@@ -127,7 +145,7 @@ class _TvHomeState extends State<TvHome> {
             final item = items[index];
             return TvVideoCard(
               item: item,
-              autofocus: index == 0,
+              autofocus: index == 0 && !_refreshFromNavigation,
               focusNode: _focusNodes[index],
               onKeyEvent: (node, event) => _onCardKey(index, event),
               onSelect: () => _openItem(item),
